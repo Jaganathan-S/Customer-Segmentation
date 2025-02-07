@@ -1,0 +1,25 @@
+let
+    // Step 1: Load data from the Excel table
+    Source = Excel.CurrentWorkbook(){[Name="CustomerData"]}[Content],
+    
+    // Step 2: Change column types
+    ChangedType = Table.TransformColumnTypes(Source, {
+        {"CustomerID", type text}, 
+        {"Age", Int64.Type}, 
+        {"Gender", type text}, 
+        {"AnnualIncome", Currency.Type}, 
+        {"SpendingScore", Int64.Type}
+    }),
+    
+    // Step 3: Filter out rows with non-positive Annual Income (if needed)
+    FilteredRows = Table.SelectRows(ChangedType, each [AnnualIncome] > 0),
+
+    // Step 4: Add a custom column for segmentation based on Spending Score
+    AddSegment = Table.AddColumn(FilteredRows, "Segment", each 
+        if [SpendingScore] >= 80 then "High Spender" 
+        else if [SpendingScore] >= 60 then "Medium Spender" 
+        else "Low Spender"
+    )
+in
+    // Step 5: Output the final table
+    AddSegment
